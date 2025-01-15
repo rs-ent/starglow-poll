@@ -1,8 +1,9 @@
 "use client";
 
-import { useContext } from "react";
+import { useState, useContext } from "react";
 import { DataContext } from "../context/PollData";
 import { submitVote } from "../firebase/fetch";
+import PollResult from "./Result";
 
 function parseAsKST(dateStrWithoutTZ) {
     return new Date(dateStrWithoutTZ.replace(" ", "T") + ":00+09:00");
@@ -10,19 +11,20 @@ function parseAsKST(dateStrWithoutTZ) {
 
 export default function PollPage({ poll_id }) {
     const pollData = useContext(DataContext);
-
     const poll = pollData?.[poll_id];
+    if (!poll || !poll.title) return <div></div>;
 
-    if (!poll || !poll.title || poll.title === '') {
-        return <div></div>;
-    }
+    const [voted, setVoted] = useState(false);
 
     const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
     const startDate = parseAsKST(poll.start);
     const endDate = parseAsKST(poll.end);
 
-    if (!poll || today < startDate || today > endDate) {
-        return <div></div>;
+    if (today < startDate) return <div></div>;
+    if (today > endDate) return <PollResult poll_id={poll_id} />;
+
+    if (voted) {
+        return <PollResult poll_id={poll_id} />;
     }
 
     const options = poll.options ? poll.options.split(";") : [];
@@ -64,7 +66,8 @@ export default function PollPage({ poll_id }) {
         };    
 
         await submitVote(poll_id, option, deviceInfo);
-        alert(`Vote : [${option}]`);
+        
+        setVoted(true);
     }
 
     return (
