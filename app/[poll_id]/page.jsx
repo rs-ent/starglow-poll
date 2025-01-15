@@ -1,4 +1,4 @@
-import PollPage from "./poll";
+import PollPage from "./Poll";
 
 export default async function PollHome({ params }) {
     const { poll_id } = await params;
